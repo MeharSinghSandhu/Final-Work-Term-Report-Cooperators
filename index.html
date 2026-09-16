@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Site Reliability Engineering Co-op Work Term Report: Mehar Sandhu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d1117;
+    --panel:#161b22;
+    --panel-2:#1c2129;
+    --border:#30363d;
+    --border-soft:#242b35;
+    --text:#e6edf3;
+    --text-dim:#8b949e;
+    --text-faint:#5b6572;
+    --blue:#58a6ff;
+    --green:#3fb950;
+    --purple:#bc8cff;
+    --radius:10px;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 10% -10%, rgba(88,166,255,0.08), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(188,140,255,0.06), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  ::selection{background:rgba(88,166,255,0.3); color:#fff;}
+
+  a{color:var(--blue);}
+
+  .wrap{
+    max-width:1040px;
+    margin:0 auto;
+    padding:0 28px;
+  }
+
+  /* ---------- Scanline / grid texture on top nav ---------- */
+  .topline{
+    position:sticky;
+    top:0;
+    z-index:50;
+    background:rgba(13,17,23,0.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  .topline-inner{
+    max-width:1040px;
+    margin:0 auto;
+    padding:14px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+  }
+  .brand{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--text-dim);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    white-space:nowrap;
+  }
+  .brand .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 8px var(--green);
+    animation:pulse 2.4s ease-in-out infinite;
+    flex-shrink:0;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;}
+    50%{opacity:0.35;}
+  }
+  .toplinks{
+    display:flex;
+    gap:22px;
+    font-family:var(--mono);
+    font-size:12px;
+  }
+  .toplinks a{
+    color:var(--text-dim);
+    text-decoration:none;
+    border-bottom:1px solid transparent;
+    padding-bottom:2px;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  .toplinks a:hover{color:var(--blue); border-color:var(--blue);}
+  @media (max-width:680px){
+    .toplinks{display:none;}
+  }
+
+  /* ---------- Hero ---------- */
+  header.hero{
+    padding:72px 0 0;
+    position:relative;
+  }
+  .status-row{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--green);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:22px;
+  }
+  .status-row::before{
+    content:'';
+    width:6px;height:6px;
+    border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 6px var(--green);
+  }
+  h1.title{
+    font-size:clamp(30px, 4.4vw, 46px);
+    line-height:1.14;
+    margin:0 0 10px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    max-width:16ch;
+  }
+  .subtitle{
+    font-family:var(--mono);
+    color:var(--text-dim);
+    font-size:14px;
+    margin:0 0 40px;
+  }
+  .subtitle .sep{color:var(--purple); margin:0 8px;}
+
+  .hero-grid{
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:36px;
+    align-items:start;
+    padding-bottom:56px;
+  }
+  @media (max-width:760px){
+    .hero-grid{grid-template-columns:1fr;}
+  }
+
+  .abstract p{
+    color:#c9d1d9;
+    font-size:16px;
+    max-width:62ch;
+  }
+  .abstract p + p{margin-top:14px;}
+
+  .intro-photo-card{
+    position:relative;
+    border-radius:var(--radius);
+    padding:6px;
+    background:linear-gradient(160deg, rgba(88,166,255,0.35), rgba(188,140,255,0.25) 60%, transparent);
+  }
+  .intro-photo-card .inner{
+    border-radius:calc(var(--radius) - 3px);
+    overflow:hidden;
+    background:var(--panel);
+    border:1px solid var(--border-soft);
+  }
+  img.intro-photo{
+    display:block;
+    width:100%;
+    height:260px;
+    object-fit:cover;
+  }
+  figcaption{
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--text-faint);
+    padding:10px 4px 2px;
+    text-align:center;
+    letter-spacing:0.01em;
+  }
+
+  /* ---------- Metric bar ---------- */
+  .metricbar{
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
+  }
+  .metric-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    max-width:1040px;
+    margin:0 auto;
+  }
+  @media (max-width:760px){
+    .metric-grid{grid-template-columns:repeat(2, 1fr);}
+  }
+  .metric{
+    padding:26px 20px;
+    border-right:1px solid var(--border);
+    text-align:left;
+  }
+  .metric:last-child{border-right:none;}
+  @media (max-width:760px){
+    .metric:nth-child(2n){border-right:none;}
+    .metric:nth-child(-n+2){border-bottom:1px solid var(--border);}
+  }
+  .metric .num{
+    font-family:var(--mono);
+    font-size:26px;
+    font-weight:700;
+    color:var(--blue);
+    display:block;
+  }
+  .metric:nth-child(2) .num{color:var(--green);}
+  .metric:nth-child(3) .num{color:var(--purple);}
+  .metric:nth-child(4) .num{color:var(--blue);}
+  .metric .label{
+    font-size:12px;
+    color:var(--text-dim);
+    margin-top:4px;
+    display:block;
+  }
+
+  /* ---------- Sections ---------- */
+  section{
+    padding:64px 0;
+    border-bottom:1px solid var(--border-soft);
+  }
+  section:last-of-type{border-bottom:none;}
+
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    margin-bottom:28px;
+  }
+  .section-tag{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-faint);
+    white-space:nowrap;
+  }
+  h2{
+    font-size:24px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:-0.005em;
+  }
+  h2 .accent{color:var(--blue);}
+
+  .prose p{
+    max-width:68ch;
+    color:#c9d1d9;
+    font-size:15.5px;
+  }
+  .prose p + p{margin-top:14px;}
+
+  /* ---------- Employer ---------- */
+  .employer-card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:26px 28px;
+  }
+
+  /* ---------- Learning goals ---------- */
+  .goals{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+    gap:16px;
+  }
+  .goal-card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px 20px 22px;
+    position:relative;
+  }
+  .goal-card-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:12px;
+  }
+  .goal-card .g-id{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--purple);
+    line-height:1.5;
+  }
+  .goal-card h3{
+    font-size:15.5px;
+    margin:0 0 8px;
+    font-weight:600;
+  }
+  .goal-card p{
+    font-size:13.8px;
+    color:var(--text-dim);
+    margin:0;
+  }
+  .goal-card.achieved{border-color:rgba(63,185,80,0.35);}
+  .goal-card .status{
+    font-family:var(--mono);
+    font-size:10px;
+    color:var(--green);
+    white-space:nowrap;
+    flex-shrink:0;
+    margin-top:2px;
+  }
+
+  /* ---------- Core reflection ---------- */
+  .reflection{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:32px;
+    position:relative;
+    overflow:hidden;
+  }
+  .reflection::before{
+    content:'';
+    position:absolute;
+    left:0; top:0; bottom:0;
+    width:3px;
+    background:linear-gradient(180deg, var(--blue), var(--purple));
+  }
+  .reflection p{
+    max-width:70ch;
+    color:#c9d1d9;
+    font-size:15.8px;
+  }
+  .reflection p + p{margin-top:14px;}
+
+  /* ---------- Job description tabs ---------- */
+  .tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+  }
+  .tab-btn{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-dim);
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:7px;
+    padding:9px 14px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .tab-btn:hover{color:var(--text); border-color:var(--text-faint);}
+  .tab-btn.active{
+    color:var(--bg);
+    background:var(--blue);
+    border-color:var(--blue);
+    font-weight:600;
+  }
+  .tab-panel{
+    display:none;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:28px;
+  }
+  .tab-panel.active{display:block;}
+  .tab-panel h3{
+    margin:0 0 10px;
+    font-size:16px;
+  }
+  .tab-panel p{
+    color:#c9d1d9;
+    font-size:15px;
+    max-width:66ch;
+    margin:0 0 14px;
+  }
+  .chiplist{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;}
+  .chip{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--green);
+    border:1px solid rgba(63,185,80,0.3);
+    background:rgba(63,185,80,0.06);
+    padding:5px 10px;
+    border-radius:5px;
+  }
+
+  .diagram-placeholder{
+    margin-top:22px;
+    border:1px dashed var(--border);
+    border-radius:8px;
+    overflow:hidden;
+    background:var(--panel-2);
+  }
+  .diagram-placeholder img{
+    display:block;
+    width:100%;
+    max-height:280px;
+    object-fit:cover;
+  }
+
+  /* ---------- Conclusions ---------- */
+  .conclusion-card{
+    background:linear-gradient(160deg, rgba(88,166,255,0.06), rgba(188,140,255,0.04));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:30px 32px;
+  }
+
+  /* ---------- Acknowledgments ---------- */
+  .thanks-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+    gap:14px;
+    margin-top:22px;
+  }
+  .thanks-card{
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:16px 18px;
+    background:var(--panel);
+  }
+  .thanks-card .name{
+    font-weight:600;
+    font-size:14.5px;
+  }
+  .thanks-card .role{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-faint);
+    margin-top:3px;
+  }
+
+  footer{
+    padding:40px 0 60px;
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--text-faint);
+    text-align:center;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+
+  :focus-visible{
+    outline:2px solid var(--blue);
+    outline-offset:2px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="topline">
+  <div class="topline-inner">
+    <div class="brand"><span class="dot"></span>coop-report / cooperators-summer26</div>
+    <div class="toplinks">
+      <a href="#employer">employer</a>
+      <a href="#goals">goals</a>
+      <a href="#reflection">reflection</a>
+      <a href="#impact">impact</a>
+      <a href="#conclusion">conclusion</a>
+      <a href="#thanks">thanks</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="status-row">system status: term complete</div>
+    <h1 class="title">Site Reliability Engineering Co-op Work Term Report</h1>
+    <p class="subtitle">Co-operators <span class="sep">/</span> Guelph, Ontario <span class="sep">/</span> Summer 2026</p>
+
+    <div class="hero-grid">
+      <div class="abstract">
+        <p>Over four months on the Co-operators SRE team, I went from reading dashboards to actually building the tooling behind them. I instrumented enterprise observability, hardened privacy controls across customer session data, and stood up automated triage pipelines that turned manual review into a same day workflow.</p>
+        <p>This report walks through the environment I worked in, the goals I set for myself, the technical systems I touched across four governed environments, and how much my thinking about reliability shifted after a term spent this close to the metrics.</p>
+      </div>
+      <figure class="intro-photo-card">
+        <div class="inner">
+          <img src="me_at_office.jpeg" alt="me at Co-operators Office" class="intro-photo" />
+        </div>
+        <figcaption>Me at the Co-operators Guelph Office.</figcaption>
+      </figure>
+    </div>
+  </header>
+</div>
+
+<div class="metricbar">
+  <div class="metric-grid">
+    <div class="metric">
+      <span class="num">90%+</span>
+      <span class="label">manual triage reduction</span>
+    </div>
+    <div class="metric">
+      <span class="num">4</span>
+      <span class="label">environments governed</span>
+    </div>
+    <div class="metric">
+      <span class="num">5/5</span>
+      <span class="label">learning goals achieved</span>
+    </div>
+    <div class="metric">
+      <span class="num">100%</span>
+      <span class="label">PII session masking</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section id="employer">
+    <div class="section-head">
+      <span class="section-tag">01 / employer</span>
+      <h2>About <span class="accent">Co-operators</span></h2>
+    </div>
+    <div class="employer-card prose">
+      <p>Co-operators is a leading Canadian financial services and insurance provider, offering home, auto, life, and business coverage alongside investment and group benefits products to millions of members across the country. Behind the customer-facing brand sits a large, distributed technology organization responsible for keeping claims, policy, and payment systems available around the clock.</p>
+      <p>That responsibility is where computing meets the business: enterprise cloud infrastructure spanning multiple environments, high-availability microservices handling sensitive financial data, and a growing SRE practice focused on operational governance and proactive telemetry rather than after-the-fact firefighting. My term sat inside that practice, working alongside engineers who treat reliability as a discipline, not an afterthought.</p>
+    </div>
+  </section>
+
+  <section id="goals">
+    <div class="section-head">
+      <span class="section-tag">02 / learning goals</span>
+      <h2>Five goals, five outcomes</h2>
+    </div>
+    <div class="goals">
+      <div class="goal-card achieved">
+        <div class="goal-card-head">
+          <span class="g-id">Goal 1: Integrative Communication</span>
+          <span class="status">achieved</span>
+        </div>
+        <h3>Align early, avoid rework</h3>
+        <p>I got into the habit of raising scope questions and flagging risks with my team lead before I started a task instead of halfway through it, so ambiguous tickets turned into shared understanding right from the start.</p>
+      </div>
+      <div class="goal-card achieved">
+        <div class="goal-card-head">
+          <span class="g-id">Goal 2: Critical Thinking</span>
+          <span class="status">achieved</span>
+        </div>
+        <h3>Checklists over guesswork</h3>
+        <p>I built pre execution checklists for the workflows I kept repeating, so my assumptions got tested before I dove into the work, which cut out the mid task scope corrections that slowed me down early in the term.</p>
+      </div>
+      <div class="goal-card achieved">
+        <div class="goal-card-head">
+          <span class="g-id">Goal 3: Decision Oriented Problem Solving</span>
+          <span class="status">achieved</span>
+        </div>
+        <h3>Root cause, not just reports</h3>
+        <p>I pushed myself past just flagging what was broken and toward explaining why it broke and how to fix it, using telemetry to drive real solutions instead of just handing off open ended issues.</p>
+      </div>
+      <div class="goal-card achieved">
+        <div class="goal-card-head">
+          <span class="g-id">Goal 4: Personal Organization</span>
+          <span class="status">achieved</span>
+        </div>
+        <h3>Break epics into shippable pieces</h3>
+        <p>I learned how to take large, fuzzy epics and break them into structured, sequenced sub tasks, which ended up being the real difference between a project that stalls and one that ships on time.</p>
+      </div>
+      <div class="goal-card achieved">
+        <div class="goal-card-head">
+          <span class="g-id">Goal 5: SRE Technical Impact</span>
+          <span class="status">achieved</span>
+        </div>
+        <h3>Build tools people keep using</h3>
+        <p>I took scripts I originally wrote to solve one specific problem and turned them into reusable Python tools that the rest of the SRE team ended up adopting into their own workflows.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="reflection">
+    <div class="section-head">
+      <span class="section-tag">03 / core reflection</span>
+      <h2>From overwhelmed to at home in the architecture</h2>
+    </div>
+    <div class="reflection">
+      <p>The hardest part of the term had nothing to do with any single ticket, it was the system itself. Co-operators runs a genuinely large enterprise application landscape, and in my first few weeks I found myself staring at service maps full of interconnected microservices, unsure where one system's job ended and another's began. Every dashboard I opened raised three new questions before it answered one.</p>
+      <p>What changed things wasn't one big breakthrough, it was a more structured approach to figuring things out. I started tracing one service dependency at a time, writing down what I learned as I went, and asking specific questions instead of vague ones. My team lead, my manager, and my mentor never made me feel like those questions were a burden, they treated them as part of the job. With that kind of support, the same architecture that once felt impossible to untangle became something I could navigate confidently, and eventually help other people navigate too.</p>
+      <p>That shift is honestly what I'm proudest of from this term. It didn't just make me better at my day to day work, it changed how I think about reliability and system design overall. Complexity isn't something to be afraid of, it's just something to structure.</p>
+    </div>
+  </section>
+
+  <section id="impact">
+    <div class="section-head">
+      <span class="section-tag">04 / job description &amp; technical impact</span>
+      <h2>What I actually built</h2>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Technical impact categories">
+      <button class="tab-btn active" data-tab="observability" role="tab" aria-selected="true">Observability &amp; Telemetry</button>
+      <button class="tab-btn" data-tab="security" role="tab" aria-selected="false">Security &amp; Privacy</button>
+      <button class="tab-btn" data-tab="architecture" role="tab" aria-selected="false">Architecture &amp; Governance</button>
+    </div>
+
+    <div class="tab-panel active" id="observability">
+      <h3>Observability &amp; Telemetry</h3>
+      <p>I built and refined Dynatrace dashboards that the SRE team uses every day, closing telemetry gaps that had left parts of the application stack basically invisible during incidents. I also tracked down and fixed node level tracing bugs that were breaking trace continuity across service boundaries, which restored full visibility into how requests moved through the system.</p>
+      <div class="chiplist">
+        <span class="chip">Dynatrace</span>
+        <span class="chip">distributed tracing</span>
+        <span class="chip">dashboard engineering</span>
+        <span class="chip">telemetry gap analysis</span>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="security">
+      <h3>Security &amp; Privacy Engineering</h3>
+      <p>I built an automated pipeline that takes Salesforce Code Analyzer findings and turns them into deduplicated vulnerability tickets in Jira, taking manual triage out of the security review process and cutting turnaround time by more than 90%. I also implemented full PII masking in Session Replay across customer facing journeys, so sensitive data never showed up in recorded sessions.</p>
+      <div class="chiplist">
+        <span class="chip">Salesforce Code Analyzer</span>
+        <span class="chip">Jira automation</span>
+        <span class="chip">deduplication logic</span>
+        <span class="chip">Session Replay PII masking</span>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="architecture">
+      <h3>Architecture &amp; Platform Governance</h3>
+      <p>I contributed to C4 architecture reviews and put together Kubernetes service maps that help new engineers ramp up faster. I also helped define SLIs and KPIs for platform health, and wrote onboarding documentation that shortens the ramp up time for the next person who touches these systems.</p>
+      <div class="chiplist">
+        <span class="chip">C4 architecture reviews</span>
+        <span class="chip">Kubernetes service mapping</span>
+        <span class="chip">SLI / KPI definition</span>
+        <span class="chip">onboarding docs</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="conclusion">
+    <div class="section-head">
+      <span class="section-tag">05 / conclusion</span>
+      <h2>Reliability as culture, not cleanup</h2>
+    </div>
+    <div class="conclusion-card prose">
+      <p>The clearest thing I'm taking away from this term is that SRE isn't just a job title bolted onto existing engineering teams, it's a real shift in how those teams operate. Every system I touched this summer moved a step further from reactive firefighting toward something more proactive: telemetry that surfaces problems before customers notice them, pipelines that triage vulnerabilities without waiting on a human, and privacy controls that are built into the platform instead of patched on after the fact.</p>
+      <p>I'm leaving this term with more than a list of tools I know how to use. I'm leaving with a working sense of how reliable systems actually get built and kept reliable, and a much clearer picture of the kind of engineer I want to become.</p>
+    </div>
+  </section>
+
+  <section id="thanks">
+    <div class="section-head">
+      <span class="section-tag">06 / acknowledgments</span>
+      <h2>Thank you</h2>
+    </div>
+    <div class="prose">
+      <p>None of this would have happened without the people who guided me through it. Thank you to my team lead, Andrew, for his patience through every architecture rabbit hole, to my manager, Nelson Ferreira, for his trust and support throughout the term, and to my co-op mentor, Damian, for always making time for my questions. Thank you as well to Lucy Villaflores and Charry Murison for their guidance and encouragement along the way, and to the entire Co-operators SRE team for welcoming me in and treating my contributions as real ones from day one.</p>
+    </div>
+    <div class="thanks-grid">
+      <div class="thanks-card">
+        <div class="name">Andrew</div>
+        <div class="role">Team Lead and Mentor</div>
+      </div>
+      <div class="thanks-card">
+        <div class="name">Nelson Ferreira</div>
+        <div class="role">Manager and Mentor</div>
+      </div>
+      <div class="thanks-card">
+        <div class="name">Damian</div>
+        <div class="role">Teammate and Mentor</div>
+      </div>
+      <div class="thanks-card">
+        <div class="name">Lucy Villaflores</div>
+        <div class="role">Manager and Mentor</div>
+      </div>
+      <div class="thanks-card">
+        <div class="name">Charry Murison</div>
+        <div class="role">Manager and Mentor</div>
+      </div>
+      <div class="thanks-card">
+        <div class="name">Co-operators SRE Team</div>
+        <div class="role">Guelph, Ontario</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  Mehar Sandhu / Co-op Work Term Report / Co-operators, Guelph, Ontario / Summer 2026
+</footer>
+
+<script>
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+      tabPanels.forEach(p => p.classList.remove('active'));
+
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
